@@ -102,7 +102,7 @@ class Algorithm():
 			return allMoves[0]
 		else:
 			for movement in allMoves:
-				score = self.minimax_full(movement, self.look_ahead, -inf, inf, False, board)
+				score = self.minimax(movement, self.look_ahead, -inf, inf, False, board)
 
 				if score > opt_score:
 					opt_score = score
@@ -114,7 +114,7 @@ class Algorithm():
 		return allMoves[len(allMoves)-1]
 
 
-	def minimax_full(self, movement, depth, alpha, beta, opt_player, tempBoardIn):
+	def minimax(self, movement, depth, alpha, beta, opt_player, tempBoardIn):
 		curr_id = self.player_id if opt_player else self.opponent_id
 		score = self.addPoints(movement, curr_id, tempBoardIn)
 
@@ -130,7 +130,7 @@ class Algorithm():
 			# Recorrer lista de posibles movimientos
 			for movement in allMoves:
 				# Evaluar cada jugada con minimax
-				eval = self.minimax_full(movement, depth - 1, alpha, beta, False, tempBoard)
+				eval = self.minimax(movement, depth - 1, alpha, beta, False, tempBoard)
 				# Nodo max resultante
 				max_res = max(max_res, eval)
 				# Guardar alpha
@@ -148,7 +148,7 @@ class Algorithm():
 			# Recorrer lista de posibles movimientos
 			for movement in allMoves:
 				# Evaluar cada jugada con minimax
-				eval = self.minimax_full(movement, depth - 1, alpha, beta, True, tempBoard)
+				eval = self.minimax(movement, depth - 1, alpha, beta, True, tempBoard)
 				# Nodo min resultante
 				mins_res = min(mins_res, eval)
 				# Guardar beta
@@ -170,11 +170,6 @@ class Algorithm():
 		stacker = 0
 		counter = 0
 		multiplier = 0
-
-		if (self.player_id == turn_id):
-			multiplier = -1
-		else:
-			multiplier = 1
 
 		for i in range(len(tempBoard[0])):
 			if ((i + 1) % N) != 0:
@@ -213,4 +208,7 @@ class Algorithm():
 				elif (finalScore - initialScore) == 1:
 					tempBoard[move[0]][move[1]] = FILLEDP21
 
-		return (finalScore - initialScore)*multiplier
+		if turn_id == self.player_id:
+			return -1*(finalScore - initialScore)
+		else:
+			return (finalScore - initialScore)

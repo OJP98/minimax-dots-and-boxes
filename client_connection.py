@@ -66,13 +66,13 @@ def on_finish(server):
 	manager.Reset()
 
 
-# username = input('Username: ')
-# tid = input('Tournament ID: ')
-# host = input('Host: ')
+username = input('Username: ')
+tid = input('Tournament ID: ')
+host = input('Host: ')
 
-username = 'Oscar'
-tid = 12
-host = 'http://7233309d38e2.ngrok.io'
+# username = 'Oscar'
+# tid = 12
+# host = 'http://localhost:4000'
 
 manager = GameManager(username, tid)
 # Look ahead as parameter
