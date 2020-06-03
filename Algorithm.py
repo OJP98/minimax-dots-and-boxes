@@ -1,5 +1,4 @@
 from math import inf
-import random
 import numpy as np
 
 # Constants
@@ -10,7 +9,6 @@ FILLEDP12 = 2
 FILLEDP21 = -1
 FILLEDP22 = -2
 N = 6
-
 ROWS = 30
 COLS = 2
 
@@ -30,13 +28,15 @@ class Algorithm():
 		else: self.opponent_id = 1
 
 
-	def doMovement(self, movement, player_id, tempBoardIn):
+	def simulateMovement(self, movement, player_id, tempBoardIn):
+		# Duplicar arreglo mapeado para recorrerlo
 		tempBoard = list(map(list, tempBoardIn))
 		initialScore = 0
 		finalScore = 0
 		stacker = 0
 		counter = 0
 
+		# Se basa en el algoritmo brindado por DAVID SOTO en un foro de canvas
 		for i in range(len(tempBoard[0])):
 			if ((i + 1) % N) != 0:
 				if tempBoard[0][i] != EMPTY and tempBoard[0][i + 1] != EMPTY and tempBoard[1][counter + stacker] != EMPTY and tempBoard[1][counter + stacker + 1] != EMPTY:
@@ -47,7 +47,6 @@ class Algorithm():
 				stacker = 0
 
 		tempBoard[movement[0]][movement[1]] = FILL
-
 		stacker = 0
 		counter = 0
 
@@ -84,8 +83,9 @@ class Algorithm():
 	def getAllMoves(self, newBoard):
 		movements = []
 
-		for i in range(len(newBoard)):
-			for j in range(len(newBoard[0])):
+		# Ciclo sencillo que itera el tablero
+		for i in range(ROWS):
+			for j in range(COLS):
 				if int(newBoard[i][j]) == 99:
 					movements.append((i, j))
 
@@ -94,10 +94,10 @@ class Algorithm():
 
 	def getBestMove(self, board):
 		opt_score = -inf
-
 		allMoves = self.getAllMoves(board)
 		total_score = int(np.sum(board))
 		 
+		# Evaluar si tenemos un puntaje que aplique a optimización o no
 		if total_score in self.canOptimize():
 			return allMoves[0]
 		else:
@@ -115,53 +115,55 @@ class Algorithm():
 
 
 	def minimax(self, movement, depth, alpha, beta, opt_player, tempBoardIn):
-		curr_id = self.player_id if opt_player else self.opponent_id
-		score = self.addPoints(movement, curr_id, tempBoardIn)
+		# Extraer arreglo del unidimensional del arreglo
+		single_arr = np.asarray(tempBoardIn).reshape(-1)
+		# Obtener id del jugador que se está evaluando
+		if opt_player:
+			curr_id = self.player_id
+		else:
+			curr_id = self.opponent_id
 
-		if depth == 0 or score != 0 or 99 not in np.asarray(tempBoardIn).reshape(-1):
-			return self.addPoints(movement, curr_id, tempBoardIn)
+		score = self.getPointsFromHeuristic(movement, curr_id, tempBoardIn)
 
-		tempBoard = self.doMovement(movement, curr_id, tempBoardIn)
+		if depth == 0 or 99 not in single_arr or score != 0 :
+			return self.getPointsFromHeuristic(movement, curr_id, tempBoardIn)
+
+		# Simular movimiento en tablero y extraer todos los posibles movimientos
+		tempBoard = self.simulateMovement(movement, curr_id, tempBoardIn)
 		allMoves = self.getAllMoves(tempBoard)
 
 		# Si es necesario optimizar al jugador, usar max
 		if opt_player:
 			max_res = -inf
-			# Recorrer lista de posibles movimientos
+			# Recorrer lista de posibles movimientos, esto nos va a permitir crear un arbol por cada escenario
+			# y evaluar cual es el mejor tiro
 			for movement in allMoves:
 				# Evaluar cada jugada con minimax
-				eval = self.minimax(movement, depth - 1, alpha, beta, False, tempBoard)
-				# Nodo max resultante
-				max_res = max(max_res, eval)
-				# Guardar alpha
-				alpha = max(alpha, eval)
+				new_res = self.minimax(movement, depth - 1, alpha, beta, False, tempBoard)
+				max_res = max(max_res, new_res)
+				# Comparar el nuevo alpha y almacenarlo si es necesario
+				alpha = max(alpha, new_res)
 				if beta <= alpha:
 					break
 
-			# Deshacer movimiento
-			tempBoard[movement[0]][movement[1]] = 99
 			return max_res
 
 		# De lo contrario, usar min
 		else:
 			mins_res = inf
-			# Recorrer lista de posibles movimientos
+			# Repetir instrucciones de if anterior
 			for movement in allMoves:
 				# Evaluar cada jugada con minimax
-				eval = self.minimax(movement, depth - 1, alpha, beta, True, tempBoard)
-				# Nodo min resultante
-				mins_res = min(mins_res, eval)
-				# Guardar beta
-				beta = min(beta, eval)
+				new_res = self.minimax(movement, depth - 1, alpha, beta, True, tempBoard)
+				mins_res = min(mins_res, new_res)
+				beta = min(beta, new_res)
 				if beta <= alpha:
 					break
 
-			# Deshacer movimiento
-			tempBoard[movement[0]][movement[1]] = 99
 			return mins_res
 	
 
-	def addPoints(self, move, turn_id, board):
+	def getPointsFromHeuristic(self, move, turn_id, board):
 
 		# Map the board
 		tempBoard = list(map(list, board))
@@ -171,6 +173,7 @@ class Algorithm():
 		counter = 0
 		multiplier = 0
 
+		# Algoritmo brindado por DAVID SOTO en un foro de canvas
 		for i in range(len(tempBoard[0])):
 			if ((i + 1) % N) != 0:
 				if tempBoard[0][i] != EMPTY and tempBoard[0][i + 1] != EMPTY and tempBoard[1][counter + stacker] != EMPTY and tempBoard[1][counter + stacker + 1] != EMPTY:
@@ -183,7 +186,6 @@ class Algorithm():
 				stacker = 0
 
 		tempBoard[move[0]][move[1]] = FILL
-
 		stacker = 0
 		counter = 0
 
